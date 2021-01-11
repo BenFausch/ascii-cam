@@ -1,0 +1,13 @@
+//HTML BASE ELEMENTS//
+html, body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body, .mdl-layout__drawer, #console, #tmp {
+    background: $violet;
+    color: white;
+}
+ul{
+  padding-left:0!important;
+}

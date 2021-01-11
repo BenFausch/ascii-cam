@@ -1,29 +1,17 @@
 import React, { Component } from "react";
+import html2canvas from 'html2canvas';
+    
 import { MobileCheck } from "./MobileCheck.js";
 import "./App.scss";
 
-//this
+
+var AU = require('ansi_up');
+//eslint-disable-next-line
+var ansi_up = new AU.default;
+
 var rdx = null;
 
 class App extends Component {
-  ///////////////////////////////
-  //  _            _
-  // | |          | |
-  // | |_ ___   __| | ___
-  // | __/ _ \ / _` |/ _ \
-  // | || (_) | (_| | (_) |
-  //  \__\___/ \__,_|\___/
-  /////////////////////////////
-  /*
-1. finish gif output logic
-2. move classlist.add to controlled html
-3. try to get console to be controlled with dangerouslySetHTML
-4. move things to components
-5. see if libraries can be npm components instead
-6. remove unused funcs, vars, ID's
-7. document/push, etc
-*/
-
   /////////////////////////////////////////////////
   //                      _                   _
   //                     | |                 | |
@@ -52,68 +40,69 @@ class App extends Component {
       outputVideo: [],
       frameMax: 40,
       consoleHTML: null,
-      // capturedDesc : document.getElementById("ascii-captured"),
-      // loader : document.querySelector(".loader"),
-      // cdiv : document.getElementById("tmp");
+      recordedProg: "",
+      daDown: null,
+      daHref: null,
+      capturedDesc: "",
+      loading: false,
+      recordingVideo: false,
     };
+
+    //class scope this
     rdx = this;
+
+    //refs
+    this.downloadImg = React.createRef();
+    this.console = React.createRef();
+    this.performanceMetrics = React.createRef();
+    this.videoElement = React.createRef();
+    this.tmp = React.createRef();
   }
 
-  checkView() {
-    if (MobileCheck() || window.innerWidth < 768) {
-      document.querySelector("body").style.display = "none";
-      window.alert(
-        "Hi there, this project is very resource heavy. Please do not attempt to use this site on your phone, it may catch fire!! Use at your own risk :)"
-      );
-    } else {
-      document.querySelector("body").style.display = "block";
-    }
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  //                  _                      __                             _
+  //                 | |                    / /                            | |
+  //   ___ __ _ _ __ | |_ _   _ _ __ ___   / /    _____  ___ __   ___  _ __| |_
+  //  / __/ _` | '_ \| __| | | | '__/ _ \ / /    / _ \ \/ / '_ \ / _ \| '__| __|
+  // | (_| (_| | |_) | |_| |_| | | |  __// /    |  __/>  <| |_) | (_) | |  | |_
+  //  \___\__,_| .__/ \__|\__,_|_|  \___/_/      \___/_/\_\ .__/ \___/|_|   \__|
+  //           | |                                        | |
+  //           |_|                                        |_|
+  //////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //start frame watcher
-  init(val) {
-    console.log("REFRESHRATE", val);
-    rdx.state.currentId = window.setInterval(
-      function () {
-        rdx.checkView();
-        rdx.takeSnapshot();
-      },
-      val ? val : rdx.state.refreshRate
-    );
-    console.log("currentId", rdx.state.currentId);
-  }
+  /*Main Loop*/
+  // Takes Video Snap, converts to ASCII
+  // Outputs for Capture/Recording
 
-  //reset watcher
-  clear() {
-    console.log("clearing rdx.state.currentId", rdx.state.currentId);
-    window.clearInterval(rdx.state.currentId);
-  }
-
-  //capture frame
   takeSnapshot() {
-    var t0 = performance.now();
-    // var img = document.querySelector('img') || document.createElement('img');
-    var context;
-    var width = rdx.state.video.offsetWidth,
+    let t0 = performance.now(),
+      context,
+      width = rdx.state.video.offsetWidth,
       height = rdx.state.video.offsetHeight;
+
+    //set widths
     rdx.state.canvas = rdx.state.canvas || document.createElement("canvas");
     rdx.state.canvas.width = width;
     rdx.state.canvas.height = height;
+
+    //create img from video
     context = rdx.state.canvas.getContext("2d");
     context.drawImage(rdx.state.video, 0, 0, width, height);
+
+    //create ascii
     if (!rdx.state.exporting) {
-      //direct output
       rdx.state.canvas.toBlob(function (blob) {
-        var reader = new FileReader();
-        // CONVERT
+        let reader = new FileReader();
+
+        // convert to uint8array
         reader.onload = function () {
-          var arrayBuffer = this.result,
+          let arrayBuffer = this.result,
             array = new Uint8Array(arrayBuffer);
 
-          //wait for availability
+          //wait for reader availability
           if (typeof convert !== "undefined") {
             //eslint-disable-next-line
-            var txt = convert(
+            let txt = convert(
               array,
               JSON.stringify({
                 fixedWidth: parseInt(rdx.state.asciiWidth),
@@ -122,65 +111,32 @@ class App extends Component {
                 reversed: false,
               })
             );
+
             //eslint-disable-next-line
-            var ansi_up = new AnsiUp();
-            var html = ansi_up.ansi_to_html(txt);
+            // let ansi_up = new AnsiUp();
+
+            //convert HTML to ASCII
+            let html = ansi_up.ansi_to_html(txt);
             if (!rdx.state.recording) {
-              //set to html
+              //set to console
               rdx.setState({ consoleHTML: html });
             }
-            //analyze
-            var t1 = performance.now();
-            rdx.setState({ rate: t1 - t0 });
 
-            try {
-              document
-                .querySelector(".mdl-js-progress")
-                .MaterialProgress.setProgress(rdx.state.rate / 40);
-            } catch (e) {
-              console.log("no MD yet");
-            }
+            //analyze
+            let t1 = performance.now();
+            rdx.setState({ rate: parseInt(t1 - t0) });
+            rdx.setProgress();
 
             //convert screencap for export
             if (rdx.state.capturing) {
-              rdx.setState({ capturing: false });
+              rdx.captureFrame();
+            }
 
-              //eslint-disable-next-line
-              html2canvas(cdiv).then(function (canvasOutput) {
-                console.log("canvasOutput", canvasOutput);
-                var downloadImg = document.getElementById("ascii-img");
-                downloadImg.setAttribute(
-                  "download",
-                  `cool-ascii-stream-${Date.now()}.png`
-                );
-                downloadImg.setAttribute(
-                  "href",
-                  canvasOutput
-                    .toDataURL("image/png")
-                    .replace("image/png", "image/octet-stream")
-                );
-                downloadImg.click();
-              });
-            }
+            //convert to gif for export
             if (rdx.state.recording) {
-              rdx.state.outputFrames.push(html);
-              if (rdx.state.outputFrames.length === rdx.state.frameMax) {
-                document.getElementById("recordBtn").classList.remove("active");
-                console.log(
-                  "MAX FRAMES REACHED",
-                  rdx.state.outputFrames.length
-                );
-                document.querySelector("#ascii-recorded").innerHTML = "";
-                // convertToGif(rdx.state.outputFrames)
-              } else if (rdx.state.outputFrames.length < rdx.state.frameMax) {
-                document.querySelector("#ascii-recorded").innerHTML =
-                  rdx.state.outputFrames.length +
-                  "/" +
-                  rdx.state.frameMax +
-                  " recorded";
-              }
+              rdx.recordFrames(html);
             }
-          } //end undefined if
+          }
         };
 
         try {
@@ -191,82 +147,143 @@ class App extends Component {
         //END CONVERT
       }, "image/jpeg");
     } else {
-      // document.getElementById("performance").innerHTML = rdx.state.rate;
-      document
-        .querySelector(".mdl-js-progress")
-        .MaterialProgress.setProgress(rdx.state.rate / 40);
+      rdx.setProgress();
       rdx.state.rate = 0;
     }
   }
 
-  // async function convertToGif(frames) {
-  //     var cdiv = document.getElementById("tmp");
-  //     var consoleDiv = document.getElementById("console")
-  //     cdiv.style.width = consoleDiv.innerWidth;
-  //     cdiv.style.height = consoleDiv.innerHeight;
-  //     console.log("NUMBER OF TOTAL FRAMES", frames.length)
-  //     // frames.forEach(function(frame) {
-  //     for (let i = 0; i < frames.length; i++) {
-  //         cdiv.innerHTML = frames[i];
-  //         if (rdx.state.recording && i < frameMax) {
-  //             await frame2Canvas(i);
-  //         } else if (i === frameMax) {
-  //             rdx.state.exporting = true;
-  //             console.log('SHOULD CREATE GIF NOW', outputVideo.length, frameMax)
-  //             loader.classList.add('active')
-  //             capturedDesc.innerHTML = 'Creating jif... if you selected color or a high resolution, it\'ll be a minute';
-  //             createGifAsset()
-  //         }
-  //     }
-  // }
+//Set performance bar
+  setProgress() {
+    try {
+      rdx.performanceMetrics.current.MaterialProgress.setProgress(
+        rdx.state.rate / 40
+      );
+    } catch (e) {
+      console.log("no MD yet");
+    }
+  }
 
-  // function frame2Canvas(index) {
-  //     return new Promise(resolve => {
-  //         html2canvas(cdiv).then(function(canvasOutput) {
-  //             console.log('recorded output', canvasOutput)
-  //             let img = canvasOutput.toDataURL("image/png")
-  //             outputVideo.push(img)
-  //             console.log('frames captured', outputVideo.length, 'INDEX', index)
-  //             loader.classList.add('active')
-  //             capturedDesc.innerHTML = 'Capturing frames, ' + outputVideo.length + '/' + frameMax;
-  //             resolve(true)
-  //         });
-  //     })
-  // }
+  //Captures 1 Frame From ASCII Output, Downloads Gif
+  captureFrame() {
+    rdx.setState({ capturing: false });
 
-  // function createGifAsset() {
-  //     gifshot.createGIF({
-  //         'images': outputVideo,
-  //         // 'interval': refreshRate / 3600,
-  //         'interval':.00833,
-  //         'gifWidth': 1000,
-  //         'gifHeight': 625,
-  //     }, function(obj) {
-  //         if (!obj.error) {
-  //             var image = obj.image;
-  //             console.log("gif created", image)
-  //             var downloadImg = document.getElementById('ascii-img');
-  //             downloadImg.setAttribute('download', `cool-ascii-stream-${Date.now()}.gif`);
-  //             downloadImg.setAttribute('href', image.replace("image/gif", "image/octet-stream"));
-  //             downloadImg.click();
-  //             console.log("CLEARING QUEUE")
-  //             outputFrames = [];
-  //             outputVideo = [];
-  //             rdx.state.recording = false;
-  //             loader.classList.remove('active')
-  //             capturedDesc.innerHTML = '';
-  //             rdx.state.exporting = false;
-  //         } else {
-  //             console.log('error', obj.error)
-  //             rdx.state.recording = false;
-  //         }
-  //     });
-  //     return false;
-  // }
+    //eslint-disable-next-line
+    html2canvas(rdx.console.current).then(function (canvasOutput) {
+      rdx.setState({
+        daDown: `cool-ascii-stream-${Date.now()}.png`,
+        daHref: canvasOutput
+          .toDataURL("image/png")
+          .replace("image/png", "image/octet-stream"),
+      });
 
+      rdx.downloadImg.current.click();
+    });
+  }
+
+  //Captures Frames from ASCII Output, Converts to Gif When Max Reached
+  recordFrames(html) {
+    rdx.state.outputFrames.push(html);
+    if (rdx.state.outputFrames.length === rdx.state.frameMax) {      
+      rdx.setState({ recordedProg: "", recordingVideo: false });
+
+      //convert to gif
+      rdx.convertToGif(rdx.state.outputFrames);
+    } else if (rdx.state.outputFrames.length < rdx.state.frameMax) {
+      rdx.setState({
+        recordedProg: `${rdx.state.outputFrames.length} / ${rdx.state.frameMax} recorded`,
+      });
+    }
+  }
+
+  //Converts Video Frames to Gif, Outputs Gif When Complete
+  async convertToGif(frames) {
+    //set capture frame to match video frame height
+    rdx.tmp.current.style.width = rdx.console.current.innerWidth;
+    rdx.tmp.current.style.height = rdx.console.current.innerHeight;
+
+    for (let i = 0; i < frames.length; i++) {
+      rdx.setState({ tmpHTML: frames[i] });
+
+      if (rdx.state.recording && i < rdx.state.frameMax) {
+        await rdx.frame2Canvas(i);
+      } else if (i === rdx.state.frameMax) {
+        rdx.setState({
+          recording: false,
+          exporting: true,
+          loading: true,
+          capturedDesc:
+            "Creating jif... if you selected color or a high resolution, it'll be a minute",
+        });
+
+        rdx.createGifAsset();
+      }
+    }
+  }
+
+  //Converts Tmp HTML to Canvas Object
+  frame2Canvas(index) {
+    return new Promise((resolve) => {
+      //eslint-disable-next-line
+      html2canvas(rdx.tmp.current).then(function (canvasOutput) {
+        let img = canvasOutput.toDataURL("image/png");
+
+        let curOpt = rdx.state.outputVideo;
+        curOpt.push(img);
+
+        rdx.setState({
+          outputVideo: curOpt,
+          loading: true,
+          capturedDesc:
+            "Capturing frames, " +
+            rdx.state.outputVideo.length +
+            "/" +
+            rdx.state.frameMax,
+        });
+        resolve(true);
+      });
+    });
+  }
+
+  //Creates GIF from Output Video Frames
+  createGifAsset() {
+    //eslint-disable-next-line
+    gifshot.createGIF(
+      {
+        images: rdx.state.outputVideo,
+        // 'interval': refreshRate / 3600,
+        interval: 0.00833,
+        gifWidth: 1000,
+        gifHeight: 625,
+      },
+      function (obj) {
+        if (!obj.error) {
+          var image = obj.image;
+          rdx.setState({
+            daDown: `cool-ascii-stream-${Date.now()}.gif`,
+            daHref: image.replace("image/gif", "image/octet-stream"),
+          });
+
+          rdx.downloadImg.current.click();
+
+          rdx.setState({
+            outputFrames: [],
+            outputVideo: [],
+            loading: false,
+            capturedDesc: "",
+            exporting: false,
+          });
+        } else {
+          console.log("error", obj.error);
+          rdx.state.recording = false;
+        }
+      }
+    );
+    return false;
+  }
+
+  //Clears Interval, Restarts watcher with new rate
   setRefresh(e) {
     rdx.clear();
-    console.log("val", e.target.value);
     rdx.setState({ refreshRate: e.target.value });
     rdx.init(e.target.value);
   }
@@ -280,15 +297,43 @@ class App extends Component {
   // |_|_| |_|_|\__|
   //////////////////////////
 
+  //Begins Frame Watcher
+  init(val) {
+    rdx.state.currentId = window.setInterval(
+      function () {
+        rdx.checkView();
+        rdx.takeSnapshot();
+      },
+      val ? val : rdx.state.refreshRate
+    );
+  }
+
+  //Resets Frame Watcher
+  clear() {
+    window.clearInterval(rdx.state.currentId);
+  }
+
+  //Verifies Desktop
+  checkView() {
+    if (MobileCheck() || window.innerWidth < 768) {
+      document.querySelector("body").style.display = "none";
+      window.alert(
+        "Hi there, this project is very resource heavy. Please do not attempt to use this site on your phone, it may catch fire!! Use at your own risk :)"
+      );
+    } else {
+      document.querySelector("body").style.display = "block";
+    }
+  }
+
   componentDidMount() {
-    //camera check and init
+    //Verifies Camera Permissions
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
         .getUserMedia({
           video: true,
         })
         .then(function (stream) {
-          rdx.state.video = document.querySelector("#videoElement");
+          rdx.state.video = rdx.videoElement.current;
           rdx.state.video.srcObject = stream;
           rdx.init();
         })
@@ -301,7 +346,7 @@ class App extends Component {
     //eslint-disable-next-line
     const go = new Go();
 
-    //create wasm instance
+    //Creates New WASM Instance
     WebAssembly.instantiateStreaming(
       fetch("js/main.wasm"),
       go.importObject
@@ -328,13 +373,12 @@ class App extends Component {
             <div className="mdl-layout__header-row">
               <div className="mdl-textfield" id="logo">
                 <pre>
-                  &nbsp;&nbsp;&nbsp;________________ ____ <br />
-                  &nbsp;&nbsp;/ _ \__ ___/__ _/_ |<br />
-                  &nbsp;/ /_\ \| | \ \/ /| |<br />
-                  / | \ | \ / | |<br />
-                  \&nbsp;&nbsp;__|____/____| \_/ |___|
-                  <br />
-                  &nbsp;\/
+                  {`   ________________      ____ 
+  /  _  \\__    ___/__  _/_   |
+ /  /_\\  \\|    |  \\  \\/ /|   |
+/    |    \\    |   \\   / |   |
+\\____|__  /____|    \\_/  |___|
+        \\/                    `}
                 </pre>
               </div>
               <div className="mdl-layout-spacer"></div>
@@ -486,18 +530,29 @@ class App extends Component {
                   <span className="video-card-image__filename">You</span>
                 </div>
 
-                <video autoPlay={true} id="videoElement"></video>
-                <span id="recordBtn">
+                <video
+                  autoPlay={true}
+                  id="videoElement"
+                  ref={rdx.videoElement}
+                  height="175"
+                ></video>
+                <span
+                  id="recordBtn"
+                  className={rdx.state.recordingVideo ? "active" : " "}
+                >
                   {" "}
                   Recording...<i></i>
                 </span>
-                <p id="ascii-recorded"></p>
+                <p id="ascii-recorded">{rdx.state.recordedProg}</p>
+
                 <div className="mdl-card__actions">
                   <h4>Capture</h4>
                   <button
                     id="ascii-record"
                     className="mdl-button mdl-button--raised"
-                    onClick={() => rdx.setState({ recording: true })}
+                    onClick={() =>
+                      rdx.setState({ recording: true, recordingVideo: true })
+                    }
                   >
                     Record
                   </button>
@@ -530,14 +585,23 @@ class App extends Component {
                     Once finished this will export as a png file for your
                     enjoyment.
                   </div>
-                  <div className="loader">
+                  <div
+                    className={`loader ${rdx.state.loading ? "active" : ""}`}
+                  >
                     <div></div>
                     <div></div>
                     <div></div>
                   </div>
-                  <p id="ascii-captured"></p>
+                  <p id="ascii-captured" ref={rdx.captured}>
+                    {rdx.state.capturedDesc}
+                  </p>
                   {/*eslint-disable-next-line*/}
-                  <a id="ascii-img" href=""></a>
+                  <a
+                    id="ascii-img"
+                    href={rdx.state.daHref}
+                    download={rdx.state.daDown}
+                    ref={rdx.downloadImg}
+                  ></a>
                 </div>
 
                 <div className="perf-card">
@@ -546,7 +610,10 @@ class App extends Component {
                     id="ascii-performance"
                   >
                     <h4>Performance</h4>
-                    <div className="mdl-progress mdl-js-progress"></div>
+                    <div
+                      className="mdl-progress mdl-js-progress"
+                      ref={rdx.performanceMetrics}
+                    ></div>
                     <p>
                       <span id="performance">{rdx.state.rate}</span> ms response
                       time
@@ -575,12 +642,15 @@ class App extends Component {
                 <div className="mdl-card__actions">You in ASCII !</div>
                 <pre
                   id="console"
+                  ref={rdx.console}
                   style={{ color: this.state.consoleColor }}
                   dangerouslySetInnerHTML={{ __html: rdx.state.consoleHTML }}
                 ></pre>
                 <pre
                   id="tmp"
+                  ref={rdx.tmp}
                   style={{ position: "absolute", bottom: "-1500px" }}
+                  dangerouslySetInnerHTML={{ __html: rdx.state.tmpHTML }}
                 ></pre>
               </div>
             </div>

@@ -1,0 +1,73 @@
+//MATERIAL DESIGN LITE OVERRIDES//
+.mdl {
+    &-layout__drawer {
+        background-color: $white-transparent-1;
+        border: none!important;
+        margin-right: 2em;
+        z-index: 9999;
+        transform: none!important;
+    }
+    &-layout--fixed-drawer>&-layout__content {
+        margin-left: 240px!important;
+        transform: none!important;
+    }
+    &-layout-title {
+        padding-left: 20px!important;
+    }
+    &-layout__drawer-button {
+        display: none!important;
+    }
+    &-layout__header {
+        background: $siren;
+        margin-left: 240px!important;
+        width: calc(100% - 240px)!important;
+    }
+    &-layout__content {
+        overflow: hidden;
+    }
+    &-textfield {
+        font-size: 22px;
+    }
+    &-textfield sub {
+        font-size: 10px;
+    }
+    &-switch {
+        margin-left: 22px;
+    }
+    &-switch__track {
+        background: $white-transparent-9;
+    }
+    &-navigation {
+        font-size: 20px;
+    }
+    &-navigation__link {
+        color: white!important;
+        padding-left: 1px!important;
+    }
+    &-navigation__link:hover {
+        background-color: $siren!important;
+    }
+    &-tooltip {
+        font-size: 14px;
+        line-height: 16px;
+        font-weight: 300;
+    }
+    &-progress {
+        height: 50px;
+        width: 100%;
+        overflow: hidden;
+    }
+    &-progress>.progressbar {
+        background: $siren;
+    }
+    &-progress>.bufferbar {
+        background-image: none;
+        background: $white-transparent-1;
+    }
+    &-card__actions {
+        background-color: $white-transparent-1;
+        margin-bottom: 25px;
+        font-size: 32px;
+        text-align: center;
+    }
+}

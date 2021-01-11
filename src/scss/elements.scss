@@ -1,0 +1,148 @@
+//CUSTOM ELEMENTS//
+#logo {
+    font-size: 9px;
+    line-height: 1em;
+    font-weight: bold;
+    text-align: left;
+    margin-top: 6px;
+}
+#ascii-record {
+    background-color: $siren;
+}
+#ascii-record, #ascii-capture {
+    font-size: 16px;
+    color: white;
+    display: block;
+    width: 100%;
+    transition: all 0ms;
+    margin: 1em 0;
+}
+.loader {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+    &.active {
+        opacity: 1;
+    }
+    div {
+        display: inline-block;
+        position: absolute;
+        left: 8px;
+        width: 16px;
+        background: $white;
+        animation: loader 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+        &:nth-child(1) {
+            left: 8px;
+            animation-delay: -0.24s;
+        }
+        &:nth-child(2) {
+            left: 32px;
+            animation-delay: -0.12s;
+        }
+        &:nth-child(3) {
+            left: 56px;
+            animation-delay: 0;
+        }
+    }
+}
+#ascii-record:hover, #ascii-capture:hover {
+    background-color: transparent;
+}
+.performance-container {
+    position: fixed;
+    bottom: 0px;
+    width: 250px;
+}
+#textColor {
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    padding-left: 2em;
+    outline: none;
+    margin-top: 1em;
+    height: 50px;
+}
+#info {
+    position: absolute;
+    bottom: 2%;
+    left: 8%;
+    background: none;
+    font-size: 24px;
+    font-style: italic;
+    font-weight: bold;
+    color: $white;
+    background-color: rgba(128, 0, 64, 0.937);
+    border: 2px solid white;
+    border-radius: 50%;
+    padding-right: 12px;
+    width: 40px;
+    height: 40px;
+    box-sizing: border-box;
+    text-align: center;
+    transition: all 300ms ease-in-out;
+    z-index: 999;
+    &:hover {
+        color: $siren;
+        border-color: transparent;
+    }
+}
+.page-content {
+    display: flex;
+    flex-direction: row;
+    align-content: flex-start;
+    padding: 1%;
+}
+.video-card, .ascii-card {
+    width: 100%;
+    background: $violet;
+    color: white;
+}
+.ascii-card {
+    display: flex;
+    align-items: center;
+    padding-left: 6px;
+}
+.video-card {
+    max-width: 250px;
+    margin-right: 10px;
+}
+.ascii-card .mdl-card__actions {
+    margin-bottom: 0;
+}
+.gif-output {
+    position: absolute;
+    bottom: 0px;
+    left: 25%;
+    z-index: 9999;
+    width: 600px;
+    height: 375px;
+}
+#recordBtn {
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 300ms;
+    margin-top: -2em;
+    text-align: right;
+    margin-right: 1em;
+    text-shadow: 2px 2px 4px black;
+    &.active {
+        opacity: 1;
+    }
+    i:after {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        content: " ";
+        background-color: red;
+        vertical-align: sub;
+        margin-left: 3px;
+        animation-name: recording;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+    }
+}
