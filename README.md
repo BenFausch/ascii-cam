@@ -9,6 +9,8 @@
 * [GifShot](https://www.npmjs.com/package/gifshot)
 * [image2ascii](https://github.com/qeesung/image2ascii)
 * [Material UI Lite](https://getmdl.io/)
+* [React Toastify](https://fkhadra.github.io/react-toastify/introduction/)
+* [Jest/Enzyme](https://enzymejs.github.io/enzyme/)
 
 #### Start the App Locally by running
 `npm start`

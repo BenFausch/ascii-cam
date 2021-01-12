@@ -398,7 +398,10 @@ class App extends Component {
     }
   }
 
+
+
   componentDidMount() {
+    window.addEventListener("resize", rdx.checkView());
     //Verifies Camera Permissions
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices
@@ -456,7 +459,7 @@ class App extends Component {
     return (
       <div className="App">
         {rdx.state.invalidBrowser ? (
-          <div className="invalidBrowser">
+          <div className="invalidBrowser" id="errorMsg">
             <ToastContainer
               position="top-center"
               autoClose={9000}
@@ -466,7 +469,7 @@ class App extends Component {
               rtl={false}
               pauseOnFocusLoss
               draggable
-              pauseOnHover
+              pauseOnHover              
             />
           </div>
         ) : (
