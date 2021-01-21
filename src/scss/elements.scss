@@ -22,6 +22,12 @@
     transition: all 0ms;
     margin: 1em 0;
 }
+#ascii-img{
+    border:none!important;
+    text-decoration: none!important;
+    opacity:0!important;
+    visibility: hidden;
+}
 .loader {
     display: inline-block;
     position: relative;
